@@ -1,3 +1,7 @@
+from random import random
+import psycopg2
+import random
+from datetime import date, timedelta
 # SQL statements to create tables
 create_statements = {
     'content_repository': """
