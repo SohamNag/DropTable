@@ -1,7 +1,4 @@
-from random import random
 import psycopg2
-import random
-from datetime import date, timedelta
 # SQL statements to create tables
 create_database_statement = "CREATE DATABASE masterdb;"
 
@@ -168,49 +165,29 @@ def delete_all_data(connection_params):
 # Function to create the database
 def create_database(connection_params):
     conn = None
-    try:
-        # Connect to the default 'postgres' database to create a new database
-        conn = psycopg2.connect(
-            dbname='postgres',  # This should be 'postgres', not the new database name
-            user=connection_params['user'],
-            password=connection_params['password'],
-            host=connection_params['host'],
-            port=connection_params['port']
-        )
-        conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-        cursor = conn.cursor()
-        cursor.execute(f"SELECT 1 FROM pg_database WHERE datname = '{connection_params['dbname']}'")
-        exists = cursor.fetchone()
-        if not exists:
-            cursor.execute(create_database_statement)
-            print(f"Database {connection_params['dbname']} created successfully.")
-        else:
-            print(f"Database {connection_params['dbname']} already exists.")
-        cursor.close()
-    except Exception as error:
-        print(f"Error creating database: {error}")
-    finally:
-        if conn is not None:
-            conn.close()
+    # Connect to the default 'postgres' database to create a new database
+    conn = connect_potsgres("postgres")
+    conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+    cur = conn.cursor()
+    cur.execute(f"CREATE DATABASE {connection_params['dbname']}")
+    cur.close()
+    conn.close()
 
-# Function to create tables in the new database
-def create_tables(connection_params):
-    conn = None
-    try:
-        # Connect to the new database to create tables
-        conn = psycopg2.connect(**connection_params)
-        cursor = conn.cursor()
-        for table, statement in create_statements.items():
-            cursor.execute(statement)
-        conn.commit()
-        cursor.close()
-    except Exception as error:
-        print(f"Error creating tables: {error}")
-        if conn is not None:
-            conn.rollback()
-    finally:
-        if conn is not None:
-            conn.close()
+def connect_potsgres(dbname):
+    """
+    Connect to the PostgreSQL using psycopg2 with default database
+    Return the connection
+    """
+
+    conn = psycopg2.connect(
+        host="localhost",
+        database=dbname,
+        user="user",
+        password="password",  # change this to your password
+        port="5440",
+    )
+    print("this is conn", conn)
+    return conn
 
 # Connection parameters for the default 'postgres' database
 default_connection_params = {
@@ -234,4 +211,7 @@ if __name__ == "__main__":
     create_database(default_connection_params)
     print("done database")
     create_tables(connection_params)
-    print("done tables")
+    with connect_potsgres(dbname="masterdb") as conn:
+        conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+        
+        print("done connection")
