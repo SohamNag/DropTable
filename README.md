@@ -39,7 +39,7 @@ Your directory tree currently should be looking like this
 `datasets` has mock data CSVs for the project. Inside the `docker` directory you has a `master` docker image config and `slave1` image config. You can setup more slaves 
 by making more slave directories `mkdir -p slave<#>/config` and copying the `.conf` files from `slave1/config` to `slave<#>/config`
 
-Now to spin up your master PostgreSQL.
+### Spin up your master PostgreSQL.
 
 Create a network on which all instances will communicate:
 `docker network create postgres`
@@ -66,7 +66,9 @@ Few things to note here:
 - We run this instance on port `5001`, instead of the usual `5432`.
 - In this project we are using postgres 15.0, you may choose to upgrade to latest versions.
 
-Now, we will have to create a replication user to replicate master for slave instances. Run the following commands.
+### Create backup
+
+First we will have to create a replication user to replicate master for slave instances. Run the following commands.
 
 ```
 docker exec -it master bash
@@ -76,7 +78,8 @@ createuser -U postgresadmin -P -c 5 --replication replicationUser
 exit
 ```
 
-Take a base backup of master.
+Take a base backup of `master`` and put it in `data` directory of `slave1`.
+
 ```
 docker run -it --rm \
 --net postgres \
@@ -84,11 +87,11 @@ docker run -it --rm \
 --entrypoint /bin/bash postgres:15.0
 ```
 
-Take the backup by loggin into `master` with our `replicationUser` and writing the backup to `\data`.
+Take the backup by logging into `master` with our `replicationUser` and writing the backup to `\data`.
 
 `pg_basebackup -h master -p 5432 -U replicationUser -D /data/ -Fp -Xs -R`
 
-Now let's start the `slave1` instance.
+### Spin up the `slave1` instance.
 
 ```
 docker run -it --rm --name slave1 \ 
