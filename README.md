@@ -78,7 +78,7 @@ createuser -U postgresadmin -P -c 5 --replication replicationUser
 exit
 ```
 
-Take a base backup of `master`` and put it in `data` directory of `slave1`.
+Take a base backup of `master` and put it in `data` directory of `slave1`.
 
 ```
 docker run -it --rm \
@@ -87,11 +87,11 @@ docker run -it --rm \
 --entrypoint /bin/bash postgres:15.0
 ```
 
-Take the backup by logging into `master` with our `replicationUser` and writing the backup to `\data`.
+Take the backup by logging into `master` with our `replicationUser` and writing the backup to `/data`.
 
 `pg_basebackup -h master -p 5432 -U replicationUser -D /data/ -Fp -Xs -R`
 
-### Spin up the `slave1` instance.
+### Spin up the slave1 instance.
 
 ```
 docker run -it --rm --name slave1 \ 
