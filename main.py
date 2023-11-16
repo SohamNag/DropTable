@@ -1,4 +1,5 @@
 import psycopg2
+import csv
 # SQL statements to create tables
 create_database_statement = "CREATE DATABASE masterdb;"
 
@@ -107,14 +108,22 @@ def create_tables(connection_params):
         if conn is not None:
             conn.close()
 
-# Function to insert data into a specified table
-def insert_data(connection_params, table_name, columns, values):
+# Function to insert data into a specified table from a CSV file
+def insert_data_from_csv(connection_params, table_name, csv_path):
     conn = None
     try:
         conn = psycopg2.connect(**connection_params)
         cursor = conn.cursor()
-        sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in values])})"
-        cursor.execute(sql, values)
+
+        with open(csv_path, 'r') as csv_file:
+            csv_reader = csv.reader(csv_file)
+            header = next(csv_reader)  # Assuming the first row contains column names
+
+            for row in csv_reader:
+                values = tuple(row)
+                sql = f"INSERT INTO {table_name} ({', '.join(header)}) VALUES ({', '.join(['%s' for _ in values])})"
+                cursor.execute(sql, values)
+
         conn.commit()
         cursor.close()
     except Exception as error:
@@ -122,6 +131,7 @@ def insert_data(connection_params, table_name, columns, values):
     finally:
         if conn is not None:
             conn.close()
+
 
 # Function to delete data from a specified table based on a condition
 def delete_data(connection_params, table_name, condition=None):
@@ -166,10 +176,10 @@ def delete_all_data(connection_params):
 def create_database(connection_params):
     conn = None
     # Connect to the default 'postgres' database to create a new database
-    conn = connect_potsgres("postgres")
+    conn = connect_potsgres("masterdb")
     conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
     cur = conn.cursor()
-    cur.execute(f"CREATE DATABASE {connection_params['dbname']}")
+    # cur.execute(f"CREATE DATABASE {connection_params['dbname']}")
     cur.close()
     conn.close()
 
@@ -182,36 +192,38 @@ def connect_potsgres(dbname):
     conn = psycopg2.connect(
         host="localhost",
         database=dbname,
-        user="user",
-        password="password",  # change this to your password
-        port="5440",
+        user="postgresadmin",
+        password="admin123",  # change this to your password
+        port="5001",
     )
     print("this is conn", conn)
     return conn
 
 # Connection parameters for the default 'postgres' database
 default_connection_params = {
-    'user': 'user',
-    'password': 'password',
+    'user': 'postgresadmin',
+    'password': 'admin123',
     'host': 'localhost',
-    'port': '5440'
+    'port': '5001'
 }
 
 # Placeholder for connection parameters
 connection_params = {
     'dbname': 'masterdb',
-    'user': 'user',
-    'password': 'password',
+    'user': 'postgresadmin',
+    'password': 'admin123',
     'host': 'localhost',
-    'port': '5440'
+    'port': '5001'
 }
 
 
 if __name__ == "__main__":
-    create_database(default_connection_params)
-    print("done database")
-    create_tables(connection_params)
-    with connect_potsgres(dbname="masterdb") as conn:
-        conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+    # create_database(default_connection_params)
+    # print("done database")
+    # create_tables(connection_params)
+    # with connect_potsgres(dbname="masterdb") as conn:
+    #     conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
         
-        print("done connection")
+    #     print("done connection")
+    insert_data_from_csv(connection_params, 'content_repository', './datasets/content_repository.csv')
+    print("uploaded content_repository")
