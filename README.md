@@ -90,7 +90,7 @@ Take the backup by loggin into `master` with our `replicationUser` and writing t
 
 Now let's start the `slave1` instance.
 
-`
+```
     docker run -it --rm --name slave1 \ 
     --net postgres \
     -e POSTGRES_USER=postgresadmin \
@@ -102,7 +102,7 @@ Now let's start the `slave1` instance.
     -v $(pwd)/slave1/archive:/mnt/server/archive \
     -p 5002:5432 \
     postgres:15.0 -c 'config_file=/config/postgresql.conf'
-`
+```
 
 - Please note we start this instance on port `5002`.
 - To setup more slave instance, repeat the backup steps and then spin them up on different ports.
