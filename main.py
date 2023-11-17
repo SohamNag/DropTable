@@ -39,8 +39,9 @@ create_statements = {
     'geolocation': """
         CREATE TABLE IF NOT EXISTS geolocation (
             user_id INTEGER PRIMARY KEY REFERENCES user_profiles(user_id),
-            user_geolocation_data VARCHAR(255),
-            server_locations VARCHAR(255)
+            geolocation_id INTEGER,
+            user_geolocation_lat DOUBLE PRECISION,
+            user_geolocation_long DOUBLE PRECISION,
         );
     """,
     'billing': """
@@ -62,15 +63,13 @@ create_statements = {
     'user_preferences': """
         CREATE TABLE IF NOT EXISTS user_preferences (
             user_id INTEGER REFERENCES user_profiles(user_id),
-            genre_pref VARCHAR(255),
-            PRIMARY KEY (user_id, genre_pref)
+            genre_pref VARCHAR(255)
         );
     """,
     'viewing_history': """
         CREATE TABLE IF NOT EXISTS viewing_history (
             user_id INTEGER REFERENCES user_profiles(user_id),
-            content_id INTEGER REFERENCES content_repository(content_id),
-            PRIMARY KEY (user_id, content_id)
+            content_id INTEGER REFERENCES content_repository(content_id)
         );
     """,
     'logging': """
@@ -79,7 +78,8 @@ create_statements = {
             user_id INTEGER REFERENCES user_profiles(user_id),
             system_metrics VARCHAR(255),
             gender VARCHAR(255),
-            ip_address VARCHAR(255)
+            ip_address VARCHAR(255),
+            email VARCHAR(255),
         );
     """,
     'server_locations': """
@@ -218,12 +218,39 @@ connection_params = {
 
 
 if __name__ == "__main__":
-    # create_database(default_connection_params)
-    # print("done database")
-    # create_tables(connection_params)
-    # with connect_potsgres(dbname="masterdb") as conn:
-    #     conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+    create_database(default_connection_params)
+    print("done database")
+    create_tables(connection_params)
+    with connect_potsgres(dbname="masterdb") as conn:
+        conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
         
-    #     print("done connection")
+        print("done connection")
     insert_data_from_csv(connection_params, 'content_repository', './datasets/content_repository.csv')
     print("uploaded content_repository")
+    
+    insert_data_from_csv(connection_params, 'user_profiles', './datasets/user_profiles.csv')
+    print("uploaded user_profiles")
+    
+    insert_data_from_csv(connection_params, 'streaming_metadata', './datasets/streaming_metadata.csv')
+    print("uploaded streaming_metadata")
+    
+    insert_data_from_csv(connection_params, 'authentication', './datasets/authentication.csv')
+    print("uploaded authentication")
+    
+    insert_data_from_csv(connection_params, 'geolocation', './datasets/geolocation.csv')
+    print("uploaded geolocation")
+    
+    insert_data_from_csv(connection_params, 'billing', './datasets/billing.csv')
+    print("uploaded billing")
+    
+    insert_data_from_csv(connection_params, 'user_preferences', './datasets/user_preferences.csv')
+    print("uploaded user_preferences")
+    
+    insert_data_from_csv(connection_params, 'viewing_history', './datasets/viewing_history.csv')
+    print("uploaded viewing_history")
+    
+    insert_data_from_csv(connection_params, 'logging', './datasets/logging.csv')
+    print("uploaded logging")
+    
+    insert_data_from_csv(connection_params, 'server_locations', './datasets/server_locations.csv')
+    print("uploaded server_locations")
