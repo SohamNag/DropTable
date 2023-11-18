@@ -41,7 +41,7 @@ create_statements = {
             user_id INTEGER PRIMARY KEY REFERENCES user_profiles(user_id),
             geolocation_id INTEGER,
             user_geolocation_lat DOUBLE PRECISION,
-            user_geolocation_long DOUBLE PRECISION,
+            user_geolocation_long DOUBLE PRECISION
         );
     """,
     'billing': """
@@ -79,7 +79,7 @@ create_statements = {
             system_metrics VARCHAR(255),
             gender VARCHAR(255),
             ip_address VARCHAR(255),
-            email VARCHAR(255),
+            email VARCHAR(255)
         );
     """,
     'server_locations': """
