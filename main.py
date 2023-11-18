@@ -9,7 +9,9 @@ create_statements = {
             content_id SERIAL PRIMARY KEY,
             title VARCHAR(255),
             genre VARCHAR(255),
-            duration INTERVAL
+            duration INTERVAL,
+            content_file_reference VARCHAR(255),
+            view_count INTEGER
         );
     """,
     'user_profiles': """
@@ -87,7 +89,7 @@ create_statements = {
             server_id SERIAL PRIMARY KEY,
             server_location VARCHAR(255)
         );
-    """,
+    """
 }
 
 # Function to create tables in the database

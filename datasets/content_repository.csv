@@ -1,4 +1,4 @@
-content_id,title,genre,duration,title.1,view_count
+content_id,title,genre,duration,content_file_reference,view_count
 1,The Trap,Crime|Drama|Horror,89,The_Trap,460867
 2,Just Ask My Children,Comedy,110,Just_Ask_My_Children,973872
 3,Vision Quest,Action|Adventure|Comedy|Crime|Thriller,62,Vision_Quest,485041
