@@ -110,6 +110,7 @@ def create_tables(connection_params):
         if conn is not None:
             conn.close()
 
+
 # Function to insert data into a specified table from a CSV file
 def insert_data_from_csv(connection_params, table_name, csv_path):
     conn = None
@@ -218,41 +219,75 @@ connection_params = {
     'port': '5001'
 }
 
+def query_execute(connection_params):
+    conn = None
+    try:
+        conn = psycopg2.connect(**connection_params)
+        cursor = conn.cursor()
 
+        sql = """EXPLAIN ANALYZE CREATE MATERIALIZED VIEW top_genres_by_geolocation1 AS
+                SELECT
+                unnest(string_to_array(user_preferences.genre_pref, '|')) AS genre,
+                COUNT(*) AS genre_count,
+                geolocation.geolocation_id,
+                ROW_NUMBER() OVER (PARTITION BY geolocation.geolocation_id ORDER BY COUNT(*) DESC) AS row_num
+                FROM
+                user_preferences
+                JOIN
+                geolocation ON user_preferences.user_id = geolocation.user_id
+                WHERE
+                user_preferences.genre_pref <> ''
+                GROUP BY
+                genre, geolocation.geolocation_id;"""
+        
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        for row in rows:
+            print(row)
+        conn.commit()
+        cursor.close()
+    except Exception as error:
+        print(f"Error: {error}")
+    finally:
+        if conn is not None:
+            conn.close()
 if __name__ == "__main__":
-    create_database(default_connection_params)
-    print("done database")
-    create_tables(connection_params)
+    # create_database(default_connection_params)
+    # print("done database")
+    # create_tables(connection_params)
     with connect_potsgres(dbname="masterdb") as conn:
         conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
         
         print("done connection")
-    insert_data_from_csv(connection_params, 'content_repository', './datasets/content_repository.csv')
-    print("uploaded content_repository")
+    # insert_data_from_csv(connection_params, 'content_repository', './datasets/content_repository.csv')
+    # print("uploaded content_repository")
     
-    insert_data_from_csv(connection_params, 'user_profiles', './datasets/user_profiles.csv')
-    print("uploaded user_profiles")
+    # insert_data_from_csv(connection_params, 'user_profiles', './datasets/user_profiles.csv')
+    # print("uploaded user_profiles")
     
-    insert_data_from_csv(connection_params, 'streaming_metadata', './datasets/streaming_metadata.csv')
-    print("uploaded streaming_metadata")
+    # insert_data_from_csv(connection_params, 'streaming_metadata', './datasets/streaming_metadata.csv')
+    # print("uploaded streaming_metadata")
     
-    insert_data_from_csv(connection_params, 'authentication', './datasets/authentication.csv')
-    print("uploaded authentication")
+    # insert_data_from_csv(connection_params, 'authentication', './datasets/authentication.csv')
+    # print("uploaded authentication")
     
-    insert_data_from_csv(connection_params, 'geolocation', './datasets/geolocation.csv')
-    print("uploaded geolocation")
+    # insert_data_from_csv(connection_params, 'geolocation', './datasets/geolocation.csv')
+    # print("uploaded geolocation")
     
-    insert_data_from_csv(connection_params, 'billing', './datasets/billing.csv')
-    print("uploaded billing")
+    # insert_data_from_csv(connection_params, 'billing', './datasets/billing.csv')
+    # print("uploaded billing")
     
-    insert_data_from_csv(connection_params, 'user_preferences', './datasets/user_preferences.csv')
-    print("uploaded user_preferences")
+    # insert_data_from_csv(connection_params, 'user_preferences', './datasets/user_preferences.csv')
+    # print("uploaded user_preferences")
     
-    insert_data_from_csv(connection_params, 'viewing_history', './datasets/viewing_history.csv')
-    print("uploaded viewing_history")
+    # insert_data_from_csv(connection_params, 'viewing_history', './datasets/viewing_history.csv')
+    # print("uploaded viewing_history")
     
-    insert_data_from_csv(connection_params, 'logging', './datasets/logging.csv')
-    print("uploaded logging")
+    # insert_data_from_csv(connection_params, 'logging', './datasets/logging.csv')
+    # print("uploaded logging")
     
-    insert_data_from_csv(connection_params, 'server_locations', './datasets/server_locations.csv')
-    print("uploaded server_locations")
+    # insert_data_from_csv(connection_params, 'server_locations', './datasets/server_locations.csv')
+    # print("uploaded server_locations")
+
+    query_execute(connection_params)
+    print("Location wise sql query with top 5 genres")
