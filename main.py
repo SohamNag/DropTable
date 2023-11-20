@@ -50,7 +50,7 @@ create_statements = {
         CREATE TABLE IF NOT EXISTS billing (
             billing_id SERIAL PRIMARY KEY,
             user_id INTEGER REFERENCES user_profiles(user_id),
-            payment_information VARCHAR(255),
+            payment_info VARCHAR(255),
             subscription_details VARCHAR(255)
         );
     """,
