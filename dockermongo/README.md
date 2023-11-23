@@ -39,7 +39,7 @@ docker run -dit --rm --name mongomaster \
 -v $(pwd)/mongomaster/data/db:/data/db \
 mongo mongod --replSet rs0
 ````
-6. Now, create the slave1 MongoDB container using the following command for Windows based systems
+6. Now, in a separate terminal window, create the slave1 MongoDB container using the following command for Windows based systems
 ````
 docker run -dit --rm --name mongoslave1 `
 -p 6002:27017 --net mongonetwork `
@@ -53,7 +53,7 @@ docker run -dit --rm --name mongoslave1 \
 -v $(pwd)/mongoslave1/data/db:/data/db \
 mongo mongod --replSet rs0
 ````
-7. Now, create the slave2 MongoDB container using the following command for Windows based systems
+7. Now, in a separate terminal window, create the slave2 MongoDB container using the following command for Windows based systems
 ````
 docker run -dit --rm --name mongoslave2 `
 -p 6003:27017 --net mongonetwork `
