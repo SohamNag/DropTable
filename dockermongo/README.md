@@ -14,12 +14,17 @@ docker network create mongonetwork
 ```
 3. Ensure you are inside the `dockermongo` directory
 4. Create the appropriate file structure by running the following commands sequentially
-`mkdir -p mongomaster/data/db` 
+```
+mkdir -p mongomaster/data/db
+``` 
 
-`mkdir -p mongoslave1/data/db`
+```
+mkdir -p mongoslave1/data/db
+```
 
-`mkdir -p mongoslave2/data/db`
-
+```
+mkdir -p mongoslave2/data/db
+```
 5. Create the master node MongoDB container using the following command for Windows based systems
 ````
 docker run -dit --rm --name mongomaster `
