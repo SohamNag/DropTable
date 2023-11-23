@@ -26,6 +26,11 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+dockermongo/mongomaster/data/db/
+dockermongo/mongoslave1/data/db/
+dockermongo/mongoslave2/data/db/
+
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
