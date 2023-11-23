@@ -25,7 +25,7 @@ mkdir -p mongoslave1/data/db
 ```
 mkdir -p mongoslave2/data/db
 ```
-5. Create the master node MongoDB container using the following command for Windows based systems
+5. Create the `master` node MongoDB container using the following command for Windows based systems
 ````
 docker run -dit --rm --name mongomaster `
 -p 6001:27017 --net mongonetwork `
@@ -39,7 +39,7 @@ docker run -dit --rm --name mongomaster \
 -v $(pwd)/mongomaster/data/db:/data/db \
 mongo mongod --replSet rs0
 ````
-6. Now, in a separate terminal window, create the slave1 MongoDB container using the following command for Windows based systems
+6. Now, in a separate terminal window, create the `slave1` MongoDB container using the following command for Windows based systems
 ````
 docker run -dit --rm --name mongoslave1 `
 -p 6002:27017 --net mongonetwork `
@@ -53,7 +53,7 @@ docker run -dit --rm --name mongoslave1 \
 -v $(pwd)/mongoslave1/data/db:/data/db \
 mongo mongod --replSet rs0
 ````
-7. Now, in a separate terminal window, create the slave2 MongoDB container using the following command for Windows based systems
+7. Now, in a separate terminal window, create the `slave2` MongoDB container using the following command for Windows based systems
 ````
 docker run -dit --rm --name mongoslave2 `
 -p 6003:27017 --net mongonetwork `
@@ -79,7 +79,7 @@ config = {"_id": "rs0", "members": [{"_id": 0, "host": "mongomaster:27017"},{"_i
 ````
 rs.initiate(config)
 ````
-11. Next, we exit the master container and enter the slave containers (using their respective terminal windows as described in Step 8 above) and run the following commands, in their respective shells
+11. Next, we exit the master container and enter the slave containers (using their respective terminal windows as described in Step 8 above) and run the following command, in their respective shells
 ````
 db.setSecondaryOk()
 ````
