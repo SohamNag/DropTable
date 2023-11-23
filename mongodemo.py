@@ -43,7 +43,7 @@ if __name__ == "__main__":
     collectionname = "authentication"
     
     # Insert data from CSV file
-    read_csv_and_insert(csv_file_path, "authentication")
+    read_csv_and_insert(csv_file_path, collection_name=collectionname)
 
     # Find data
     s_key = input("Enter the key to search: ")
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     # Update data (assuming you have documents to update)
     update_query = {'user_id': '76'}
     new_data = {'user_id': '176'}
-    update_data(update_query, new_data, collectionname)
+    update_data(update_query, new_data, collection_name=collectionname)
 
     # Delete data (assuming you have documents to delete)
     delete_query = {'user_id': '177'}
