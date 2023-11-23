@@ -67,7 +67,7 @@ docker run -dit --rm --name mongoslave2 \
 -v $(pwd)/mongoslave2/data/db:/data/db \
 mongo mongod --replSet rs0
 ````
-8. Next, we enter the master container using the following
+8. Next, in the terminal window pertaining to the master container, we enter the master container using the following
 ```
 docker exec -it mongomaster mongosh
 ```
@@ -79,12 +79,12 @@ config = {"_id": "rs0", "members": [{"_id": 0, "host": "mongomaster:27017"},{"_i
 ````
 rs.initiate(config)
 ````
-11. Next, we exit the master container and enter the slave containers and run the following commands, in their respective shells
+11. Next, we exit the master container and enter the slave containers (using their respective terminal windows as described in Step 8 above) and run the following commands, in their respective shells
 ````
-mongoslave1.setSecondaryOk()
+db.setSecondaryOk()
 ````
 ````
-mongoslave2.setSecondaryOk()
+db.setSecondaryOk()
 ````
 
 The replication should now be up and running.
