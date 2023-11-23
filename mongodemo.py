@@ -1,71 +1,64 @@
 import csv
 from pymongo import MongoClient
 
-# MongoDB connection details
-mongo_host = "localhost"
-mongo_port = "6001"
-mongo_user = "admin"
-mongo_password = "adminpassword"
-mongo_db = "mydb"
-mongo_collection = "mycollection"
-
 # Connect to MongoDB
-client = MongoClient(f"mongodb://{mongo_user}:{mongo_password}@{mongo_host}:{mongo_port}/{mongo_db}?replicaSet=rs0")
-print(client)
-db = client[mongo_db]
-collection = db[mongo_collection]
+db_name = "demodb"
+client = MongoClient('localhost', 6001, directConnection=True)
+db = client[db_name]
 
-def read_csv_and_insert(file_path):
+def read_csv_and_insert(file_path, collection_name):
     # Read CSV file and insert data into MongoDB
     with open(file_path, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         data = [row for row in reader]
 
-    
     # Insert data into MongoDB collection
+    collection = db[collection_name]
     result = collection.insert_many(data)
     print(f"Inserted {len(result.inserted_ids)} documents.")
 
-def find_data(query={}):
+def find_data(collection_name, query={}):
     # Find documents in MongoDB collection
+    collection = db[collection_name]
     result = collection.find(query)
+    print("Data in database:")
     for document in result:
         print(document)
 
-def update_data(query, update_data):
+def update_data(query, update_data, collection_name):
     # Update documents in MongoDB collection
+    collection = db[collection_name]
     result = collection.update_many(query, {'$set': update_data})
     print(f"Matched {result.matched_count} documents and modified {result.modified_count} documents.")
 
-def delete_data(query):
+def delete_data(query, collection_name):
     # Delete documents in MongoDB collection
+    collection = db[collection_name]
     result = collection.delete_many(query)
     print(f"Deleted {result.deleted_count} documents.")
 
 if __name__ == "__main__":
-    # Example usage
-    csv_file_path = "c:/Users/soham/Desktop/Project_512/DropTable/datasets/authentication.csv"
+    # Set your file paths and collection names here
+    csv_file_path = "path/to/csv"
+    collectionname = "authentication"
     
     # Insert data from CSV file
-    read_csv_and_insert(csv_file_path)
+    read_csv_and_insert(csv_file_path, "authentication")
 
-    # # Find data
-    # print("Data in MongoDB:")
-    # find_data()
+    # Find data
+    s_key = input("Enter the key to search: ")
+    s_value = input("Enter the value to search: ")
+    if not s_key or not s_value:
+        query = {}
+    else:
+        query = {s_key: s_value}
+    find_data(collection_name=collectionname, query=query)
 
-    # # Update data (assuming you have documents to update)
-    # update_query = {'field_to_update': 'value_to_match'}
-    # update_data = {'field_to_update': 'new_value'}
-    # update_data(update_query, update_data)
+    # Update data (assuming you have documents to update)
+    update_query = {'user_id': '76'}
+    new_data = {'user_id': '176'}
+    update_data(update_query, new_data, collectionname)
 
-    # # Find data after update
-    # print("Data in MongoDB after update:")
-    # find_data()
-
-    # # Delete data (assuming you have documents to delete)
-    # delete_query = {'field_to_delete': 'value_to_match'}
-    # delete_data(delete_query)
-
-    # # Find data after delete
-    # print("Data in MongoDB after delete:")
-    # find_data()
+    # Delete data (assuming you have documents to delete)
+    delete_query = {'user_id': '177'}
+    delete_data(delete_query, collection_name=collectionname)
