@@ -411,7 +411,43 @@ def query_execute(connection_params):
                 WHERE
                 user_preferences.genre_pref <> ''
                 GROUP BY
-                genre, geolocation.geolocation_id;"""
+                genre, geolocation.geolocation_id;
+
+                EXPLAIN ANALYZE SELECT geolocation.geolocation_id,subscription_details,count(subscription_details)
+                FROM geolocation JOIN billing on billing.user_id = geolocation.user_id
+                GROUP BY geolocation.geolocation_id,subscription_details 
+                ORDER BY geolocation.geolocation_id,subscription_details DESC;
+
+                EXPLAIN ANALYZE SELECT geolocation.geolocation_id,subscription_details,count(subscription_details)
+                FROM geolocation JOIN billing on billing.user_id = geolocation.user_id
+                GROUP BY geolocation.geolocation_id,subscription_details 
+                ORDER BY geolocation.geolocation_id,subscription_details DESC;
+                
+                
+                EXPLAIN ANALYZE WITH RankedData AS (
+                SELECT
+                    SUM(duration) as duration,
+                    genre,
+                    streaming_metadata.server_locations,
+                    ROW_NUMBER() OVER (PARTITION BY streaming_metadata.server_locations ORDER BY SUM(duration) DESC) AS row_num
+                FROM
+                    streaming_metadata
+                JOIN
+                    content_repository ON content_repository.content_id = streaming_metadata.content_id
+                GROUP BY
+                    genre, streaming_metadata.server_locations
+                )
+                SELECT
+                    duration,
+                    genre,
+                    server_locations
+                FROM
+                    RankedData
+                WHERE
+                    row_num <= 3
+                ORDER BY
+                    server_locations, row_num;
+                """
 
         cursor.execute(sql)
         rows = cursor.fetchall()
