@@ -1,4 +1,32 @@
 import psycopg2
+import csv
+
+
+
+def connect_potsgres(dbname):
+    """
+    Connect to the PostgreSQL using psycopg2 with default database
+    Return the connection
+    """
+
+    conn = psycopg2.connect(
+        host="localhost",
+        database=dbname,
+        user="postgresadmin",
+        password="admin123",  # change this to your password
+        port="5001",
+    )
+    print("this is conn", conn)
+    return conn
+
+
+# Connection parameters for the default 'postgres' database
+default_connection_params = {
+    "user": "postgresadmin",
+    "password": "admin123",
+    "host": "localhost",
+    "port": "5001",
+}
 
 # Placeholder for connection parameters
 connection_params = {
@@ -15,9 +43,7 @@ def query_execute(connection_params):
         conn = psycopg2.connect(**connection_params)
         cursor = conn.cursor()
 
-        sql = """
-                SELECT pg_advisory_lock(1); 
-                EXPLAIN ANALYZE CREATE MATERIALIZED VIEW top_genres_by_geolocation1 AS
+        sql = """EXPLAIN ANALYZE CREATE MATERIALIZED VIEW top_genres_by_geolocation1 AS
                 SELECT
                 unnest(string_to_array(user_preferences.genre_pref, '|')) AS genre,
                 COUNT(*) AS genre_count,
@@ -28,32 +54,46 @@ def query_execute(connection_params):
                 JOIN
                 geolocation ON user_preferences.user_id = geolocation.user_id
                 WHERE
+                row_num <= 5 AND
                 user_preferences.genre_pref <> ''
                 GROUP BY
                 genre, geolocation.geolocation_id;
-                SELECT pg_advisory_unlock(1);
+
+                EXPLAIN ANALYZE SELECT geolocation.geolocation_id,subscription_details,count(subscription_details)
+                FROM geolocation JOIN billing on billing.user_id = geolocation.user_id
+                GROUP BY geolocation.geolocation_id,subscription_details 
+                ORDER BY geolocation.geolocation_id,subscription_details DESC;
+
+                EXPLAIN ANALYZE SELECT geolocation.geolocation_id,subscription_details,count(subscription_details)
+                FROM geolocation JOIN billing on billing.user_id = geolocation.user_id
+                GROUP BY geolocation.geolocation_id,subscription_details 
+                ORDER BY geolocation.geolocation_id,subscription_details DESC;
+                
+                
+                EXPLAIN ANALYZE WITH RankedData AS (
+                SELECT
+                    SUM(duration) as duration,
+                    genre,
+                    streaming_metadata.server_locations,
+                    ROW_NUMBER() OVER (PARTITION BY streaming_metadata.server_locations ORDER BY SUM(duration) DESC) AS row_num
+                FROM
+                    streaming_metadata
+                JOIN
+                    content_repository ON content_repository.content_id = streaming_metadata.content_id
+                GROUP BY
+                    genre, streaming_metadata.server_locations
+                )
+                SELECT
+                    duration,
+                    genre,
+                    server_locations
+                FROM
+                    RankedData
+                WHERE
+                    row_num <= 3
+                ORDER BY
+                    server_locations, row_num;
                 """
-
-        cursor.execute(sql)
-        rows = cursor.fetchall()
-        for row in rows:
-            print(row)
-        conn.commit()
-
-        sql = """
-                BEGIN;
-                LOCK TABLE content_repository IN SHARE MODE;
-                CREATE INDEX idx_user_preferences ON user_preferences(user_id, genre_pref);
-                CREATE INDEX idx_viewing_history ON viewing_history(user_id, content_id);
-                CREATE INDEX idx_content_repository_content_id ON content_repository(content_id);
-                CREATE INDEX idx_content_repository_genre ON content_repository(genre);
-
-                EXPLAIN ANALYZE Select * from content_repository where genre in (SELECT DISTINCT genre_pref FROM user_preferences WHERE user_id = 95
-                UNION
-                SELECT DISTINCT cr.genre FROM content_repository cr JOIN viewing_history vh ON cr.content_id = vh.content_id
-                WHERE vh.user_id = 95);
-                COMMIT;
-            """
 
         cursor.execute(sql)
         rows = cursor.fetchall()
@@ -66,6 +106,7 @@ def query_execute(connection_params):
     finally:
         if conn is not None:
             conn.close()
+
 
 if __name__ == "__main__":
     query_execute(connection_params)
