@@ -256,8 +256,6 @@ def create_horizontal_partition_for_genre(connection_params, genre):
     cursor = conn.cursor()
 
     # Format the partition table name to include the genre in a safe way
-    # This is a simple example, and for production code, you should ensure
-    # that the genre string is safe to include in a SQL statement to prevent SQL injection
     partition_table_name = f"content_repository_{genre.replace(' ', '_').lower()}"
 
     # Create a new partition for the specified genre
@@ -285,7 +283,6 @@ def create_horizontal_partition_for_server_location(connection_params, server_lo
     cursor = conn.cursor()
 
     # Format the partition table name to include the server location in a safe way
-    # This is a simple example; for production code, ensure the server_location string is safe to include in a SQL statement
     partition_table_name = (
         f"streaming_metadata_{server_location.replace(' ', '_').lower()}"
     )
