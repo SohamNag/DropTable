@@ -578,7 +578,8 @@ def retrieve_table_data(table_name, limit = 5):
     '''
     # Create a query string
     query = f"SELECT * FROM {table_name} LIMIT {limit};"
-    
+    node1_result = None
+    node2_result = None
     # Attempt to connect to node1
     try:
         # Establish a connection to the first node
@@ -590,7 +591,7 @@ def retrieve_table_data(table_name, limit = 5):
         cur.close()
         conn.close()
         if result:
-            return result
+            node1_result = result
     except OperationalError as e:
         print(f"Error connecting to the first node: {e}")
 
@@ -605,12 +606,11 @@ def retrieve_table_data(table_name, limit = 5):
         cur.close()
         conn.close()
         if result:
-            return result
+            node2_result = result
     except OperationalError as e:
         print(f"Error connecting to the second node: {e}")
     
-    # If both nodes fail, return None or raise an exception
-    return None
+    return [node1_result, node2_result]
 # Connection parameters for the default 'postgres' database
 default_connection_params = {
     "user": "postgresadmin",
@@ -683,43 +683,49 @@ if __name__ == "__main__":
     
     # insert_content_from_csv("./datasets/content_repository.csv")
     
-    print("Location wise sql query with top 5 genres in node 1")
-    query_execute(connection_params)
-    print("\n")
-    print("Location wise sql query with top 5 genres in node 2")
-    query_execute(connection_params_2)
-    print("\n")
+    # print("Location wise sql query with top 5 genres in node 1")
+    # query_execute(connection_params)
+    # print("\n")
+    # print("Location wise sql query with top 5 genres in node 2")
+    # query_execute(connection_params_2)
+    # print("\n")
     
-    comedy_movie = {
-        "content_id": 101,
-        "title": "ComedyMovie",
-        "genre": "Comedy",
-        "duration": "1 hour",
-        "content_file_reference": "test",
-        "view_count": 5130,
-    }
+    # comedy_movie = {
+    #     "content_id": 101,
+    #     "title": "ComedyMovie",
+    #     "genre": "Comedy",
+    #     "duration": "1 hour",
+    #     "content_file_reference": "test",
+    #     "view_count": 5130,
+    # }
     
-    mystery_movie = {
-        "content_id": 102,
-        "title": "MysteryMovie",
-        "genre": "Mystery",
-        "duration": "2 hours",
-        "content_file_reference": "Mystery",
-        "view_count": 13340,
-    }
-    insert_content(comedy_movie)
-    print("\n")
+    # mystery_movie = {
+    #     "content_id": 102,
+    #     "title": "MysteryMovie",
+    #     "genre": "Mystery",
+    #     "duration": "2 hours",
+    #     "content_file_reference": "Mystery",
+    #     "view_count": 13340,
+    # }
+    # insert_content(comedy_movie)
+    # print("\n")
     
-    insert_content(mystery_movie)
-    print("\n")
+    # insert_content(mystery_movie)
+    # print("\n")
     
-    search_contents = ["ComedyMovie", "MysteryMovie", "ExampleMovie"]
+    # search_contents = ["ComedyMovie", "MysteryMovie", "ExampleMovie"]
     
-    for content in search_contents:
-        result = retrieve_content(content)
-        if result:
-            print(f"Content found: {result}\n")
-        else:
-            print(f"Content not found: {content}\n")
+    # for content in search_contents:
+    #     result = retrieve_content(content)
+    #     if result:
+    #         print(f"Content found: {result}\n")
+    #     else:
+    #         print(f"Content not found: {content}\n")
+    
+    result = retrieve_table_data("content_repository", 10)
+    print("node 1 data")
+    print(result[0])
+    print("\n node 2 data")
+    print(result[1])
     
 
