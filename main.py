@@ -1,6 +1,15 @@
+# pylint: disable=C0116
+# pylint: disable=C0103
+# pylint: disable=C0411
+# pylint: disable=W0621
+# pylint: disable=C0301
+# pylint: disable=W0612
+# pylint: disable=W0718
+# pylint: disable=W1514
+
 import psycopg2
 import csv
-
+from psycopg2 import OperationalError
 # SQL statements to create tables
 create_database_statement = "CREATE DATABASE masterdb;"
 
@@ -99,31 +108,32 @@ create_statements = {
     """,
 }
 
+# Function to create sequences in the database
 def create_sequences(connection_params):
     # Define sequence creation statements for each table
     sequence_statements = {
-        'content_repository_content_id_seq': "CREATE SEQUENCE IF NOT EXISTS content_repository_content_id_seq;",
-        'streaming_metadata_metadata_id_seq': "CREATE SEQUENCE IF NOT EXISTS streaming_metadata_metadata_id_seq;",
-        'billing_billing_id_seq': "CREATE SEQUENCE IF NOT EXISTS billing_billing_id_seq;"
+        "content_repository_content_id_seq": "CREATE SEQUENCE IF NOT EXISTS content_repository_content_id_seq;",
+        "streaming_metadata_metadata_id_seq": "CREATE SEQUENCE IF NOT EXISTS streaming_metadata_metadata_id_seq;",
+        "billing_billing_id_seq": "CREATE SEQUENCE IF NOT EXISTS billing_billing_id_seq;",
     }
-    
+
     # Connect to the PostgreSQL database
     conn = psycopg2.connect(**connection_params)
     cursor = conn.cursor()
-    
+
     # Execute each sequence creation statement
     for seq_name, seq_stmt in sequence_statements.items():
         cursor.execute(seq_stmt)
         print(f"Sequence {seq_name} created successfully.")
-        
+
     # Commit the changes
     conn.commit()
-    
+
     # Close the cursor and the connection
     cursor.close()
     conn.close()
     print("All sequences created successfully.")
-    
+
 # Function to create tables in the database
 def create_tables(connection_params):
     conn = None
@@ -141,7 +151,6 @@ def create_tables(connection_params):
     finally:
         if conn is not None:
             conn.close()
-
 
 # Function to insert data into a specified table from a CSV file
 def insert_data_from_csv(connection_params, table_name, csv_path):
@@ -167,7 +176,6 @@ def insert_data_from_csv(connection_params, table_name, csv_path):
         if conn is not None:
             conn.close()
 
-
 # Function to delete data from a specified table based on a condition
 def delete_data(connection_params, table_name, condition=None):
     conn = None
@@ -185,7 +193,6 @@ def delete_data(connection_params, table_name, condition=None):
     finally:
         if conn is not None:
             conn.close()
-
 
 # Function to delete all data from all tables
 def delete_all_data(connection_params):
@@ -214,9 +221,8 @@ def delete_all_data(connection_params):
         if conn is not None:
             conn.close()
 
-
 # Function to create the database
-def create_database(connection_params):
+def create_database():
     conn = None
     # Connect to the default 'postgres' database to create a new database
     conn = connect_potsgres("masterdb")
@@ -226,7 +232,7 @@ def create_database(connection_params):
     cur.close()
     conn.close()
 
-
+# Function to connect to the PostgreSQL database
 def connect_potsgres(dbname):
     """
     Connect to the PostgreSQL using psycopg2 with default database
@@ -243,127 +249,97 @@ def connect_potsgres(dbname):
     print("this is conn", conn)
     return conn
 
-
-# Connection parameters for the default 'postgres' database
-default_connection_params = {
-    "user": "postgresadmin",
-    "password": "admin123",
-    "host": "localhost",
-    "port": "5001",
-}
-
-# Placeholder for connection parameters
-connection_params = {
-    "dbname": "masterdb",
-    "user": "postgresadmin",
-    "password": "admin123",
-    "host": "localhost",
-    "port": "5001",
-}
-
-unique_genres = [
-    'Crime',
-    'Comedy',
-    'Action',
-    'Children',
-    'Drama',
-    'Adventure',
-    'Thriller',
-    'Documentary',
-    'Horror',
-    'Mystery',
-    'Romance'
-]
-
-server_locations = [
-    'Tokyo',
-    'Nairobi',
-    'Denver',
-    'Berlin',
-    'Rio',
-]
-
+# Function to create a horizontal partition for a specified genre
 def create_horizontal_partition_for_genre(connection_params, genre):
     # Connect to the PostgreSQL database
     conn = psycopg2.connect(**connection_params)
     cursor = conn.cursor()
-    
+
     # Format the partition table name to include the genre in a safe way
     # This is a simple example, and for production code, you should ensure
     # that the genre string is safe to include in a SQL statement to prevent SQL injection
     partition_table_name = f"content_repository_{genre.replace(' ', '_').lower()}"
-    
+
     # Create a new partition for the specified genre
     create_partition_statement = f"""
         CREATE TABLE IF NOT EXISTS {partition_table_name} PARTITION OF content_repository
         FOR VALUES IN (%s);
     """
-    
+
     # Execute the create partition statement
     cursor.execute(create_partition_statement, (genre,))
-    
+
     # Commit the changes
     conn.commit()
-    
+
     # Close the cursor and the connection
     cursor.close()
     conn.close()
-    
+
     print(f"Partition for genre '{genre}' created successfully.")
 
+# Function to create a horizontal partition for a specified server location
 def create_horizontal_partition_for_server_location(connection_params, server_location):
     # Connect to the PostgreSQL database
     conn = psycopg2.connect(**connection_params)
     cursor = conn.cursor()
-    
+
     # Format the partition table name to include the server location in a safe way
     # This is a simple example; for production code, ensure the server_location string is safe to include in a SQL statement
-    partition_table_name = f"streaming_metadata_{server_location.replace(' ', '_').lower()}"
-    
+    partition_table_name = (
+        f"streaming_metadata_{server_location.replace(' ', '_').lower()}"
+    )
+
     # Create a new partition for the specified server location
     create_partition_statement = f"""
         CREATE TABLE IF NOT EXISTS {partition_table_name} PARTITION OF streaming_metadata
         FOR VALUES IN (%s);
     """
-    
+
     # Execute the create partition statement
     cursor.execute(create_partition_statement, (server_location,))
-    
+
     # Commit the changes
     conn.commit()
-    
+
     # Close the cursor and the connection
     cursor.close()
     conn.close()
-    
+
     print(f"Partition for server location '{server_location}' created successfully.")
 
-def create_horizontal_partition_for_subscription_details(connection_params, subscription_detail):
+# Function to create a horizontal partition for a specified subscription detail
+def create_horizontal_partition_for_subscription_details(
+    connection_params, subscription_detail
+):
     # Connect to the PostgreSQL database
     conn = psycopg2.connect(**connection_params)
     cursor = conn.cursor()
-    
+
     # Format the partition table name to include the subscription detail in a safe way
     partition_table_name = f"billing_{subscription_detail.replace(' ', '_').lower()}"
-    
+
     # Create a new partition for the specified subscription detail
     create_partition_statement = f"""
         CREATE TABLE IF NOT EXISTS {partition_table_name} PARTITION OF billing
         FOR VALUES IN (%s);
     """
-    
+
     # Execute the create partition statement
     cursor.execute(create_partition_statement, (subscription_detail,))
-    
+
     # Commit the changes
     conn.commit()
-    
+
     # Close the cursor and the connection
     cursor.close()
     conn.close()
-    
-    print(f"Partition for subscription detail '{subscription_detail}' created successfully.")
 
+    print(
+        f"Partition for subscription detail '{subscription_detail}' created successfully."
+    )
+
+# Function to drop all tables
 def drop_all_tables(connection_params):
     conn = None
     try:
@@ -380,7 +356,7 @@ def drop_all_tables(connection_params):
             "user_profiles",
             "content_repository",
             "server_locations",
-            "user_preferences"
+            "user_preferences",
         ]
         for table in tables_in_order:
             cursor.execute(f"DROP TABLE {table} CASCADE")
@@ -392,6 +368,7 @@ def drop_all_tables(connection_params):
         if conn is not None:
             conn.close()
 
+# Function to execute sql queries
 def query_execute(connection_params):
     conn = None
     try:
@@ -461,46 +438,199 @@ def query_execute(connection_params):
         if conn is not None:
             conn.close()
 
-
-if __name__ == "__main__":
+# Function to initialise the database
+def initialise_db_tables(connection_params):
     drop_all_tables(connection_params)
     create_tables(connection_params)
     create_sequences(connection_params)
+
+# Function to initialise the database with data
+def initialise_db_data(connection_params):
     for genre in unique_genres:
         create_horizontal_partition_for_genre(connection_params, genre)
-    insert_data_from_csv(connection_params, 'content_repository', './datasets/content_repository.csv')
-    print("uploaded content_repository")
-
-    insert_data_from_csv(connection_params, 'user_profiles', './datasets/user_profiles.csv')
-    print("uploaded user_profiles")
 
     for server_location in server_locations:
-        create_horizontal_partition_for_server_location(connection_params, server_location)
-    insert_data_from_csv(connection_params, 'streaming_metadata', './datasets/streaming_metadata.csv')
-    print("uploaded streaming_metadata")
+        create_horizontal_partition_for_server_location(
+            connection_params, server_location
+        )
 
-    insert_data_from_csv(connection_params, 'authentication', './datasets/authentication.csv')
-    print("uploaded authentication")
-
-    insert_data_from_csv(connection_params, 'geolocation', './datasets/geolocation.csv')
-    print("uploaded geolocation")
-
-    for tiers in ['tier1', 'tier2', 'tier3']:
+    for tiers in ["tier1", "tier2", "tier3"]:
         create_horizontal_partition_for_subscription_details(connection_params, tiers)
-    insert_data_from_csv(connection_params, 'billing', './datasets/billing.csv')
-    print("uploaded billing")
 
-    insert_data_from_csv(connection_params, 'user_preferences', './datasets/user_preferences.csv')
-    print("uploaded user_preferences")
+    for table, filename in datasets.items():
+        insert_data_from_csv(connection_params, table, filename)
+        print(f"uploaded {table}")
 
-    insert_data_from_csv(connection_params, 'viewing_history', './datasets/viewing_history.csv')
-    print("uploaded viewing_history")
+# Function to insert content into the database
+# Data is distributed across the two nodes based on the genre
+def insert_content(content):
+    conn_params = None
+    if (content["genre"] in unique_genres[:6]):
+        conn_params = connection_params
+        print("inserting in node 1 \n")
+    else:
+        conn_params = connection_params_2
+        print("inserting in node 2 \n")
+    conn = None
+    # convert content to tuple
+    content = tuple(content.values())
+    print(content)
+    try:
+        conn = psycopg2.connect(**conn_params)
+        cursor = conn.cursor()
+        sql = f"INSERT INTO content_repository (content_id, title, genre, duration, content_file_reference, view_count) VALUES (%s, %s, %s, %s, %s, %s)"
+        cursor.execute(sql, content)
+        conn.commit()
+        cursor.close()
+    except Exception as error:
+        print(f"Error: {error}")
+        if conn is not None:
+            conn.rollback()
+    finally:
+        if conn is not None:
+            conn.close()
 
-    insert_data_from_csv(connection_params, 'logging', './datasets/logging.csv')
-    print("uploaded logging")
+def retrieve_content(content_name):
+    '''
+    Tries to retrieve the content from both the nodes in a round robin fashion.
+    '''
+    # Create a query string
+    query = "SELECT * FROM content_repository WHERE title = %s;"
+    
+    # Attempt to connect to node1
+    try:
+        # Establish a connection to the first node
+        print("searching in node 1 \n")
+        conn = psycopg2.connect(**connection_params)
+        cur = conn.cursor()
+        cur.execute(query, (content_name,))
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+        if result:
+            return result
+    except OperationalError as e:
+        print(f"Error connecting to the first node: {e}")
 
-    insert_data_from_csv(connection_params, 'server_locations', './datasets/server_locations.csv')
-    print("uploaded server_locations")
+    # If node1 fails, attempt to connect to node2
+    try:
+        # Establish a connection to the second node
+        print("searching in node 2 \n")
+        conn = psycopg2.connect(**connection_params_2)
+        cur = conn.cursor()
+        cur.execute(query, (content_name,))
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+        if result:
+            return result
+    except OperationalError as e:
+        print(f"Error connecting to the second node: {e}")
+    
+    # If both nodes fail, return None or raise an exception
+    return None
+        
+# Connection parameters for the default 'postgres' database
+default_connection_params = {
+    "user": "postgresadmin",
+    "password": "admin123",
+    "host": "localhost",
+    "port": "5001",
+}
 
-    query_execute(connection_params)
-    print("Location wise sql query with top 5 genres")
+# connection parameters
+# for node 1
+connection_params = {
+    "dbname": "masterdb",
+    "user": "postgresadmin",
+    "password": "admin123",
+    "host": "localhost",
+    "port": "5001",
+}
+
+# for node 2
+connection_params_2 = {
+    "dbname": "masterdb",
+    "user": "postgresadmin",
+    "password": "admin123",
+    "host": "localhost",
+    "port": "5003",
+}
+
+unique_genres = [
+    "Crime",
+    "Comedy",
+    "Action",
+    "Children",
+    "Drama",
+    "Adventure",
+    "Thriller",
+    "Documentary",
+    "Horror",
+    "Mystery",
+    "Romance",
+]
+
+server_locations = [
+    "Tokyo",
+    "Nairobi",
+    "Denver",
+    "Berlin",
+    "Rio",
+]
+
+datasets = {
+    "content_repository": "./datasets/content_repository.csv",
+    "user_profiles": "./datasets/user_profiles.csv",
+    "streaming_metadata": "./datasets/streaming_metadata.csv",
+    "authentication": "./datasets/authentication.csv",
+    "geolocation": "./datasets/geolocation.csv",
+    "billing": "./datasets/billing.csv",
+    "user_preferences": "./datasets/user_preferences.csv",
+    "viewing_history": "./datasets/viewing_history.csv",
+    "logging": "./datasets/logging.csv",
+    "server_locations": "./datasets/server_locations.csv",
+}
+
+if __name__ == "__main__":
+
+    # initialise_db_tables(connection_params)
+    # initialise_db_tables(connection_params_2)
+
+    # initialise_db_data(connection_params)
+    # initialise_db_data(connection_params_2)
+    
+    # print("Location wise sql query with top 5 genres in node 1")
+    # query_execute(connection_params)
+    # print("Location wise sql query with top 5 genres in node 2")
+    # query_execute(connection_params_2)
+    
+    # comedy_movie = {
+    #     "content_id": 101,
+    #     "title": "ComedyMovie",
+    #     "genre": "Comedy",
+    #     "duration": "1 hour",
+    #     "content_file_reference": "test",
+    #     "view_count": 5130,
+    # }
+    
+    # mystery_movie = {
+    #     "content_id": 102,
+    #     "title": "MysteryMovie",
+    #     "genre": "Mystery",
+    #     "duration": "2 hours",
+    #     "content_file_reference": "Mystery",
+    #     "view_count": 13340,
+    # }
+    # insert_content(comedy_movie)
+    # insert_content(mystery_movie)
+    
+    # search_contents = ["ComedyMovie", "MysteryMovie", "ExampleMovie"]
+    
+    # for content in search_contents:
+    #     result = retrieve_content(content)
+    #     if result:
+    #         print(f"Content found: {result}")
+    #     else:
+    #         print(f"Content not found: {content}")
+

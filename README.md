@@ -44,7 +44,7 @@ by making more slave directories `mkdir -p slave<#>/config` and copying the `.co
 Create a network on which all instances will communicate:
 `docker network create postgres`
 
-Spin up master, run the following at the `root`:
+Spin up master, run the following in `docker` directory:
 
 ```
 docker run -it --rm --name master \ 

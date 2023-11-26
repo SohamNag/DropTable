@@ -158,10 +158,10 @@ if __name__ == "__main__":
         read_csv_and_insert(csv_file_path, collection_name=collectionname)
 
     unoptimised_result = non_optimized_query(db["user_preferences"])
-    print("Unoptimized result <truncated>: ", unoptimised_result[:5])
+    print("Unoptimized result <truncated>: ", unoptimised_result)
     
     optimised_result = optimized_query(db["user_preferences"])
-    print("Optimized result <truncated>: ", optimised_result[:5])
+    print("Optimized result <truncated>: ", optimised_result)
     # Find data
     # s_key = input("Enter the key to search: ")
     # s_value = input("Enter the value to search: ")
