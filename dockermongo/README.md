@@ -38,7 +38,7 @@ mkdir -p mongoslave3/data/db
 mkdir -p mongoslave4/data/db
 ```
 
-5. Create the `master` and `master2` nodes MongoDB containers using the following commands in different terminal windows, sequentially for Windows based systems
+5. Create the `master` and `master2` nodes MongoDB containers using the following commands sequentially for Windows based systems
 ````
 docker run -dit --rm --name mongomaster `
 -p 6001:27017 --net mongonetwork `
@@ -66,7 +66,7 @@ docker run -dit --rm --name mongomaster2 \
 -v $(pwd)/mongomaster2/data/db:/data/db \
 mongo mongod --replSet rs1
 ````
-6. Now, in separate terminal windows, create the `slave1` and `slave3` MongoDB containers using the following commands for Windows based systems
+6. Now, create the `slave1` and `slave3` MongoDB containers using the following commands sequentially for Windows based systems
 ````
 docker run -dit --rm --name mongoslave1 `
 -p 6002:27017 --net mongonetwork `
@@ -94,7 +94,7 @@ docker run -dit --rm --name mongoslave3 \
 -v $(pwd)/mongoslave3/data/db:/data/db \
 mongo mongod --replSet rs1
 ````
-7. Now, in separate terminal windows, create the `slave2` and `slave4` MongoDB containers using the following commands for Windows based systems
+7. Now, create the `slave2` and `slave4` MongoDB containers using the following commands sequentially for Windows based systems
 ````
 docker run -dit --rm --name mongoslave2 `
 -p 6003:27017 --net mongonetwork `
@@ -122,7 +122,7 @@ docker run -dit --rm --name mongoslave4 \
 -v $(pwd)/mongoslave4/data/db:/data/db \
 mongo mongod --replSet rs1
 ````
-8. Next, in the terminal windows pertaining to the `master` and `master2` containers, enter the respective master containers using the following commands
+8. Next, in different terminal windows, one pertaining to each of the `master` and `master2` containers, enter the respective master containers using the following commands
 ```
 docker exec -it mongomaster mongosh
 ```
@@ -148,7 +148,7 @@ Similarly, apply the config by using the following command in the terminal windo
 ````
 rs.initiate(config2)
 ````
-11. Next, we exit the master containers' mongo shells and enter the slave containers' mongo shells (using their respective terminal windows as described in Step 8 above) and run the following command, in their respective shells
+11. Next, we exit the master containers' mongo shells and enter the slave containers' mongo shells (as described in Step 8 above) and run the following command, in their respective shells
 ````
 db.setSecondaryOk()
 ````
