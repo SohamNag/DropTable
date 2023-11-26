@@ -256,8 +256,6 @@ def create_horizontal_partition_for_genre(connection_params, genre):
     cursor = conn.cursor()
 
     # Format the partition table name to include the genre in a safe way
-    # This is a simple example, and for production code, you should ensure
-    # that the genre string is safe to include in a SQL statement to prevent SQL injection
     partition_table_name = f"content_repository_{genre.replace(' ', '_').lower()}"
 
     # Create a new partition for the specified genre
@@ -285,7 +283,6 @@ def create_horizontal_partition_for_server_location(connection_params, server_lo
     cursor = conn.cursor()
 
     # Format the partition table name to include the server location in a safe way
-    # This is a simple example; for production code, ensure the server_location string is safe to include in a SQL statement
     partition_table_name = (
         f"streaming_metadata_{server_location.replace(' ', '_').lower()}"
     )
@@ -532,7 +529,7 @@ def insert_content(content):
         if conn is not None:
             conn.close()
 
-def retrieve_content(content_name):
+def retrieve_content(title):
     '''
     Tries to retrieve the content from both the nodes in a round robin fashion.
     '''
@@ -545,7 +542,7 @@ def retrieve_content(content_name):
         print("searching in node 1 \n")
         conn = psycopg2.connect(**connection_params)
         cur = conn.cursor()
-        cur.execute(query, (content_name,))
+        cur.execute(query, (title,))
         result = cur.fetchone()
         cur.close()
         conn.close()
@@ -560,7 +557,7 @@ def retrieve_content(content_name):
         print("searching in node 2 \n")
         conn = psycopg2.connect(**connection_params_2)
         cur = conn.cursor()
-        cur.execute(query, (content_name,))
+        cur.execute(query, (title,))
         result = cur.fetchone()
         cur.close()
         conn.close()
@@ -571,7 +568,46 @@ def retrieve_content(content_name):
     
     # If both nodes fail, return None or raise an exception
     return None
-        
+
+def retrieve_table_data(table_name, limit = 5):
+    '''
+    Tries to retrieve the content from both the nodes in a round robin fashion.
+    '''
+    # Create a query string
+    query = f"SELECT * FROM {table_name} LIMIT {limit};"
+    node1_result = None
+    node2_result = None
+    # Attempt to connect to node1
+    try:
+        # Establish a connection to the first node
+        print("retrieving data from node 1 \n")
+        conn = psycopg2.connect(**connection_params)
+        cur = conn.cursor()
+        cur.execute(query)
+        result = cur.fetchall()
+        cur.close()
+        conn.close()
+        if result:
+            node1_result = result
+    except OperationalError as e:
+        print(f"Error connecting to the first node: {e}")
+
+    # If node1 fails, attempt to connect to node2
+    try:
+        # Establish a connection to the second node
+        print("retrieving data from node 2 \n")
+        conn = psycopg2.connect(**connection_params_2)
+        cur = conn.cursor()
+        cur.execute(query)
+        result = cur.fetchall()
+        cur.close()
+        conn.close()
+        if result:
+            node2_result = result
+    except OperationalError as e:
+        print(f"Error connecting to the second node: {e}")
+    
+    return [node1_result, node2_result]
 # Connection parameters for the default 'postgres' database
 default_connection_params = {
     "user": "postgresadmin",
@@ -636,46 +672,57 @@ datasets = {
 
 if __name__ == "__main__":
 
-    initialise_db_tables(connection_params)
-    initialise_db_tables(connection_params_2)
+    # initialise_db_tables(connection_params)
+    # initialise_db_tables(connection_params_2)
 
-    initialise_db_data(connection_params)
-    initialise_db_data(connection_params_2)
+    # initialise_db_data(connection_params)
+    # initialise_db_data(connection_params_2)
     
-    insert_content_from_csv("./datasets/content_repository.csv")
+    # insert_content_from_csv("./datasets/content_repository.csv")
     
-    print("Location wise sql query with top 5 genres in node 1")
-    query_execute(connection_params)
-    print("Location wise sql query with top 5 genres in node 2")
-    query_execute(connection_params_2)
+    # print("Location wise sql query with top 5 genres in node 1")
+    # query_execute(connection_params)
+    # print("\n")
+    # print("Location wise sql query with top 5 genres in node 2")
+    # query_execute(connection_params_2)
+    # print("\n")
     
-    comedy_movie = {
-        "content_id": 101,
-        "title": "ComedyMovie",
-        "genre": "Comedy",
-        "duration": "1 hour",
-        "content_file_reference": "test",
-        "view_count": 5130,
-    }
+    # comedy_movie = {
+    #     "content_id": 101,
+    #     "title": "ComedyMovie",
+    #     "genre": "Comedy",
+    #     "duration": "1 hour",
+    #     "content_file_reference": "test",
+    #     "view_count": 5130,
+    # }
     
-    mystery_movie = {
-        "content_id": 102,
-        "title": "MysteryMovie",
-        "genre": "Mystery",
-        "duration": "2 hours",
-        "content_file_reference": "Mystery",
-        "view_count": 13340,
-    }
-    insert_content(comedy_movie)
-    insert_content(mystery_movie)
+    # mystery_movie = {
+    #     "content_id": 102,
+    #     "title": "MysteryMovie",
+    #     "genre": "Mystery",
+    #     "duration": "2 hours",
+    #     "content_file_reference": "Mystery",
+    #     "view_count": 13340,
+    # }
+    # insert_content(comedy_movie)
+    # print("\n")
     
-    search_contents = ["ComedyMovie", "MysteryMovie", "ExampleMovie"]
+    # insert_content(mystery_movie)
+    # print("\n")
     
-    for content in search_contents:
-        result = retrieve_content(content)
-        if result:
-            print(f"Content found: {result}")
-        else:
-            print(f"Content not found: {content}")
+    # search_contents = ["ComedyMovie", "MysteryMovie", "ExampleMovie"]
+    
+    # for content in search_contents:
+    #     result = retrieve_content(content)
+    #     if result:
+    #         print(f"Content found: {result}\n")
+    #     else:
+    #         print(f"Content not found: {content}\n")
+    
+    result = retrieve_table_data("content_repository", 10)
+    print("node 1 data")
+    print(result[0])
+    print("\n node 2 data")
+    print(result[1])
     
 

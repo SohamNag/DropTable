@@ -1,18 +1,18 @@
 # DropTable
-Code for ASU 512 - DDS term project
+Code for ASU 512 - DDS term project.
 
 ## Contribution to the repo
 
 To contribute to the project, please follow these steps:
-- Clone it to your local machine `git clone git@github.com:bharat787/DropTable.git`
+- Fork it and clone it to your local machine `git clone git@github.com:<yourUserName>/DropTable.git`
 - Create a new branch with the contributor_feature name `git checkout -b <contributer_feature>`
 - Push the changes to **your own** branch.
 - Create a PR from github.
 
 ## Setup
 
-The project is built using Python and Docker. Please follow these steps to run your local machine
-- Download [Docker](https://docs.docker.com/get-docker/)
+The project is built using Python and Docker. Please follow these steps to run your local machine:
+- Download [Docker](https://docs.docker.com/get-docker/).
 - Install psycopg2 `pip install psycopg2`
 - `git clone git@github.com:bharat787/DropTable.git`
 - `cd DropTable`. After this you are at the `root` directory of this project. 
@@ -36,13 +36,15 @@ Your directory tree currently should be looking like this
 └── main.py
 ```
 
-`datasets` has mock data CSVs for the project. Inside the `docker` directory you has a `master` docker image config and `slave1` image config. You can setup more slaves 
-by making more slave directories `mkdir -p slave<#>/config` and copying the `.conf` files from `slave1/config` to `slave<#>/config`
+`datasets` has mock data CSVs for the project. Inside the `docker` directory you have a `master` docker image config and `slave1` image config. You can setup more master and slaves by making more master directories `mkdir -p master<#>/config` and slave directories `mkdir -p slave<#>/config` and copying the `.conf` files from the respective `./config` to the new ones.
 
 ### Spin up your master PostgreSQL.
 
 Create a network on which all instances will communicate:
-`docker network create postgres`
+
+```
+docker network create postgres
+```
 
 Spin up master, run the following in `docker` directory:
 
@@ -72,9 +74,11 @@ First we will have to create a replication user to replicate master for slave in
 
 ```
 docker exec -it master bash
-
+```
+```
 createuser -U postgresadmin -P -c 5 --replication replicationUser
-
+```
+```
 exit
 ```
 
@@ -89,7 +93,9 @@ docker run -it --rm \
 
 Take the backup by logging into `master` with our `replicationUser` and writing the backup to `/data`.
 
-`pg_basebackup -h master -p 5432 -U replicationUser -D /data/ -Fp -Xs -R`
+```
+pg_basebackup -h master -p 5432 -U replicationUser -D /data/ -Fp -Xs -R
+```
 
 ### Spin up the slave1 instance.
 
@@ -112,3 +118,5 @@ postgres:15.0 -c 'config_file=/config/postgresql.conf'
 
 Now you will have two instances of postgres running, with `master` as the primary postgres instance, with `slave1` as a replication server.
 The `slave1` instance can be promoted to `master` in case of a failover and support read-write operations.
+
+Repeat the above steps to create more masters and slaves.
