@@ -4,7 +4,36 @@ import time
 # Connect to MongoDB
 db_name = "demodb"
 client = MongoClient('localhost', 6001, directConnection=True)
+client2 = MongoClient('localhost', 7001, directConnection=True)
 db = client[db_name]
+db2 = client2[db_name]
+
+csv_files = [
+    "authentication.csv",
+    "billing.csv",
+    "content_repository.csv",
+    "geolocation.csv",
+    "logging.csv",
+    "server_locations.csv",
+    "streaming_metadata.csv",
+    "user_preferences.csv",
+    "user_profiles.csv",
+    "viewing_history.csv"
+]
+
+unique_genres = [
+    "Crime",
+    "Comedy",
+    "Action",
+    "Children",
+    "Drama",
+    "Adventure",
+    "Thriller",
+    "Documentary",
+    "Horror",
+    "Mystery",
+    "Romance",
+]
 
 def read_csv_and_insert(file_path, collection_name):
     # Read CSV file and insert data into MongoDB
@@ -13,12 +42,36 @@ def read_csv_and_insert(file_path, collection_name):
         data = [row for row in reader]
 
     # Insert data into MongoDB collection
+    if(collection_name == 'content_repository'):
+        for movie in data:
+            if(movie['genre'] in unique_genres[:5]):
+                collection = db[collection_name]
+                collection.insert_one(movie)
+            else:
+                collection = db2[collection_name]
+                collection.insert_one(movie)
+        return
+
     collection = db[collection_name]
     result = collection.insert_many(data)
     print(f"Inserted {len(result.inserted_ids)} documents.")
 
 def find_data(collection_name, query={}):
     # Find documents in MongoDB collection
+
+    if(collection_name == 'content_repository'):
+        collection = db[collection_name]
+        result = collection.find(query)
+        print("Data in database cluster 1:")
+        for document in result:
+            print(document)
+        collection = db2[collection_name]
+        result = collection.find(query)
+        print("Data in database cluster 2:")
+        for document in result:
+            print(document)
+        return
+
     collection = db[collection_name]
     result = collection.find(query)
     print("Data in database:")
@@ -37,6 +90,7 @@ def delete_data(query, collection_name):
     result = collection.delete_many(query)
     print(f"Deleted {result.deleted_count} documents.")
 
+# Optimized function
 def optimized_query(collection_name):
     start_time = time.time()
 
@@ -85,7 +139,7 @@ def optimized_query(collection_name):
     
     return results
 
-# Optimized function
+# Non-Optimized function
 def non_optimized_query(collection_name):
     start_time = time.time()
 
@@ -134,42 +188,37 @@ def non_optimized_query(collection_name):
     
     return results
 
-csv_files = [
-    "authentication.csv",
-    "billing.csv",
-    "content_repository.csv",
-    "geolocation.csv",
-    "logging.csv",
-    "server_locations.csv",
-    "streaming_metadata.csv",
-    "user_preferences.csv",
-    "user_profiles.csv",
-    "viewing_history.csv"
-]
-
 if __name__ == "__main__":
     # Read CSV and insert into MongoDB
-    for csv_file in csv_files:
-        delete_data({}, collection_name=csv_file.split(".")[0])
+    # for csv_file in csv_files:
+    #     delete_data({}, collection_name=csv_file.split(".")[0])
         
-    for csv_file in csv_files:
-        csv_file_path = f"./datasets/{csv_file}"
-        collectionname = csv_file.split(".")[0]
-        read_csv_and_insert(csv_file_path, collection_name=collectionname)
+    # for csv_file in csv_files:
+    #     csv_file_path = f"./datasets/{csv_file}"
+    #     collectionname = csv_file.split(".")[0]
+    #     read_csv_and_insert(csv_file_path, collection_name=collectionname)
 
-    unoptimised_result = non_optimized_query(db["user_preferences"])
-    print("Unoptimized result <truncated>: ", unoptimised_result)
+    # csv_file_path = "./datasets/content_repository.csv"
+    # collectionname = 'content_repository'
+    # read_csv_and_insert(csv_file_path, collection_name=collectionname)
+
+    # unoptimised_result = non_optimized_query(db["user_preferences"])
+    # print("Unoptimized result <truncated>: ", unoptimised_result)
     
-    optimised_result = optimized_query(db["user_preferences"])
-    print("Optimized result <truncated>: ", optimised_result)
+    # optimised_result = optimized_query(db["user_preferences"])
+    # print("Optimized result <truncated>: ", optimised_result)
+
     # Find data
-    # s_key = input("Enter the key to search: ")
-    # s_value = input("Enter the value to search: ")
-    # if not s_key or not s_value:
-    #     query = {}
-    # else:
-    #     query = {s_key: s_value}
-    # find_data(collection_name=collectionname, query=query)
+    print("Collection:\n0. authentication\n1. billing\n2. content_repository\n3. geolocation\n4. logging\n5. server_locations\n6. streaming_metadata\n7. user_preferences\n8. user_profiles\n9. viewing_history")
+    s_coll = int(input("Enter index of collection to search in from the list above(0-9): "))
+    s_key = input("Enter the key to search: ")
+    s_value = input("Enter the value to search: ")
+    collectionname = csv_files[s_coll].split(".")[0]
+    if not s_key or not s_value:
+        query = {}
+    else:
+        query = {s_key: s_value}
+    find_data(collection_name=collectionname, query=query)
 
     # # Update data (assuming you have documents to update)
     # update_query = {'user_id': '76'}
