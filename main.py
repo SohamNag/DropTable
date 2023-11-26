@@ -532,7 +532,7 @@ def insert_content(content):
         if conn is not None:
             conn.close()
 
-def retrieve_content(content_name):
+def retrieve_content(title):
     '''
     Tries to retrieve the content from both the nodes in a round robin fashion.
     '''
@@ -545,7 +545,7 @@ def retrieve_content(content_name):
         print("searching in node 1 \n")
         conn = psycopg2.connect(**connection_params)
         cur = conn.cursor()
-        cur.execute(query, (content_name,))
+        cur.execute(query, (title,))
         result = cur.fetchone()
         cur.close()
         conn.close()
@@ -560,7 +560,7 @@ def retrieve_content(content_name):
         print("searching in node 2 \n")
         conn = psycopg2.connect(**connection_params_2)
         cur = conn.cursor()
-        cur.execute(query, (content_name,))
+        cur.execute(query, (title,))
         result = cur.fetchone()
         cur.close()
         conn.close()
@@ -571,7 +571,46 @@ def retrieve_content(content_name):
     
     # If both nodes fail, return None or raise an exception
     return None
-        
+
+def retrieve_table_data(table_name, limit = 5):
+    '''
+    Tries to retrieve the content from both the nodes in a round robin fashion.
+    '''
+    # Create a query string
+    query = f"SELECT * FROM {table_name} LIMIT {limit};"
+    
+    # Attempt to connect to node1
+    try:
+        # Establish a connection to the first node
+        print("retrieving data from node 1 \n")
+        conn = psycopg2.connect(**connection_params)
+        cur = conn.cursor()
+        cur.execute(query)
+        result = cur.fetchall()
+        cur.close()
+        conn.close()
+        if result:
+            return result
+    except OperationalError as e:
+        print(f"Error connecting to the first node: {e}")
+
+    # If node1 fails, attempt to connect to node2
+    try:
+        # Establish a connection to the second node
+        print("retrieving data from node 2 \n")
+        conn = psycopg2.connect(**connection_params_2)
+        cur = conn.cursor()
+        cur.execute(query)
+        result = cur.fetchall()
+        cur.close()
+        conn.close()
+        if result:
+            return result
+    except OperationalError as e:
+        print(f"Error connecting to the second node: {e}")
+    
+    # If both nodes fail, return None or raise an exception
+    return None
 # Connection parameters for the default 'postgres' database
 default_connection_params = {
     "user": "postgresadmin",
@@ -636,18 +675,20 @@ datasets = {
 
 if __name__ == "__main__":
 
-    initialise_db_tables(connection_params)
-    initialise_db_tables(connection_params_2)
+    # initialise_db_tables(connection_params)
+    # initialise_db_tables(connection_params_2)
 
-    initialise_db_data(connection_params)
-    initialise_db_data(connection_params_2)
+    # initialise_db_data(connection_params)
+    # initialise_db_data(connection_params_2)
     
-    insert_content_from_csv("./datasets/content_repository.csv")
+    # insert_content_from_csv("./datasets/content_repository.csv")
     
     print("Location wise sql query with top 5 genres in node 1")
     query_execute(connection_params)
+    print("\n")
     print("Location wise sql query with top 5 genres in node 2")
     query_execute(connection_params_2)
+    print("\n")
     
     comedy_movie = {
         "content_id": 101,
@@ -667,15 +708,18 @@ if __name__ == "__main__":
         "view_count": 13340,
     }
     insert_content(comedy_movie)
+    print("\n")
+    
     insert_content(mystery_movie)
+    print("\n")
     
     search_contents = ["ComedyMovie", "MysteryMovie", "ExampleMovie"]
     
     for content in search_contents:
         result = retrieve_content(content)
         if result:
-            print(f"Content found: {result}")
+            print(f"Content found: {result}\n")
         else:
-            print(f"Content not found: {content}")
+            print(f"Content not found: {content}\n")
     
 
