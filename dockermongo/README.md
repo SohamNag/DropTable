@@ -132,12 +132,12 @@ docker exec -it mongomaster2 mongosh
 ```
 9. We define the replication config in `master` mongo shell by setting a variable in its terminal window, using the following command
 ````
-config = {"_id": "rs0", "members": [{"_id": 0, "host": "mongomaster:27017"},{"_id": 1, "host": "mongoslave1:27017"},{"_id": 2, "host": "mongoslave2:27017"}]}
+config = {"_id": "rs0", "members": [{"_id": 0, "host": "mongomaster:27017", "priority": 20},{"_id": 1, "host": "mongoslave1:27017", "priority": 5},{"_id": 2, "host": "mongoslave2:27017", "priority": 5}]}
 ````
 
 Similarly, in the terminal window of `master2` mongo shell, run the following command
 ````
-config2 = {"_id": "rs1", "members": [{"_id": 0, "host": "mongomaster2:27017"},{"_id": 1, "host": "mongoslave3:27017"},{"_id": 2, "host": "mongoslave4:27017"}]}
+config2 = {"_id": "rs1", "members": [{"_id": 0, "host": "mongomaster2:27017", "priority": 20},{"_id": 1, "host": "mongoslave3:27017", "priority": 5},{"_id": 2, "host": "mongoslave4:27017", "priority": 5}]}
 ````
 
 10. Then, apply the config by using the following command in the terminal window of the `master` container
