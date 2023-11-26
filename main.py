@@ -462,6 +462,48 @@ def initialise_db_data(connection_params):
         print(f"uploaded {table}")
 
 # Function to insert content into the database
+def insert_content_from_csv(csv_path):
+    '''
+    depending on the genre, the data is distributed across the two nodes
+    '''
+    conn1 = None
+    conn2 = None
+    
+    try:
+        conn1 = psycopg2.connect(**connection_params)
+        cursor1 = conn1.cursor()
+        
+        conn2 = psycopg2.connect(**connection_params_2)
+        cursor2 = conn2.cursor()
+        
+        with open(csv_path, "r") as csv_file:
+            csv_reader = csv.reader(csv_file)
+            header = next(csv_reader)
+            
+            for row in csv_reader:
+                values = tuple(row)
+                if (values[2] in unique_genres[:6]):
+                    sql = f"INSERT INTO content_repository (content_id, title, genre, duration, content_file_reference, view_count) VALUES (%s, %s, %s, %s, %s, %s)"
+                    cursor1.execute(sql, values)
+                else:
+                    sql = f"INSERT INTO content_repository (content_id, title, genre, duration, content_file_reference, view_count) VALUES (%s, %s, %s, %s, %s, %s)"
+                    cursor2.execute(sql, values)
+        conn1.commit()
+        conn2.commit()
+        cursor1.close()
+        cursor2.close()
+    except Exception as error:
+        print(f"Error: {error}")
+        if conn1 is not None:
+            conn1.rollback()
+        if conn2 is not None:
+            conn2.rollback()
+    finally:
+        if conn1 is not None:
+            conn1.close()
+        if conn2 is not None:
+            conn2.close()
+        
 # Data is distributed across the two nodes based on the genre
 def insert_content(content):
     conn_params = None
@@ -580,7 +622,7 @@ server_locations = [
 ]
 
 datasets = {
-    "content_repository": "./datasets/content_repository.csv",
+    # "content_repository": "./datasets/content_repository.csv",
     "user_profiles": "./datasets/user_profiles.csv",
     "streaming_metadata": "./datasets/streaming_metadata.csv",
     "authentication": "./datasets/authentication.csv",
@@ -594,43 +636,46 @@ datasets = {
 
 if __name__ == "__main__":
 
-    # initialise_db_tables(connection_params)
-    # initialise_db_tables(connection_params_2)
+    initialise_db_tables(connection_params)
+    initialise_db_tables(connection_params_2)
 
-    # initialise_db_data(connection_params)
-    # initialise_db_data(connection_params_2)
+    initialise_db_data(connection_params)
+    initialise_db_data(connection_params_2)
     
-    # print("Location wise sql query with top 5 genres in node 1")
-    # query_execute(connection_params)
-    # print("Location wise sql query with top 5 genres in node 2")
-    # query_execute(connection_params_2)
+    insert_content_from_csv("./datasets/content_repository.csv")
     
-    # comedy_movie = {
-    #     "content_id": 101,
-    #     "title": "ComedyMovie",
-    #     "genre": "Comedy",
-    #     "duration": "1 hour",
-    #     "content_file_reference": "test",
-    #     "view_count": 5130,
-    # }
+    print("Location wise sql query with top 5 genres in node 1")
+    query_execute(connection_params)
+    print("Location wise sql query with top 5 genres in node 2")
+    query_execute(connection_params_2)
     
-    # mystery_movie = {
-    #     "content_id": 102,
-    #     "title": "MysteryMovie",
-    #     "genre": "Mystery",
-    #     "duration": "2 hours",
-    #     "content_file_reference": "Mystery",
-    #     "view_count": 13340,
-    # }
-    # insert_content(comedy_movie)
-    # insert_content(mystery_movie)
+    comedy_movie = {
+        "content_id": 101,
+        "title": "ComedyMovie",
+        "genre": "Comedy",
+        "duration": "1 hour",
+        "content_file_reference": "test",
+        "view_count": 5130,
+    }
     
-    # search_contents = ["ComedyMovie", "MysteryMovie", "ExampleMovie"]
+    mystery_movie = {
+        "content_id": 102,
+        "title": "MysteryMovie",
+        "genre": "Mystery",
+        "duration": "2 hours",
+        "content_file_reference": "Mystery",
+        "view_count": 13340,
+    }
+    insert_content(comedy_movie)
+    insert_content(mystery_movie)
     
-    # for content in search_contents:
-    #     result = retrieve_content(content)
-    #     if result:
-    #         print(f"Content found: {result}")
-    #     else:
-    #         print(f"Content not found: {content}")
+    search_contents = ["ComedyMovie", "MysteryMovie", "ExampleMovie"]
+    
+    for content in search_contents:
+        result = retrieve_content(content)
+        if result:
+            print(f"Content found: {result}")
+        else:
+            print(f"Content not found: {content}")
+    
 
