@@ -28,12 +28,30 @@ Your directory tree currently should be looking like this
 │   │       ├── pg_hba.conf
 │   │       ├── pg_ident.conf
 │   │       └── postgresql.conf
-│   └── slave1
-│       └── config
-│           ├── pg_hba.conf
-│           ├── pg_ident.conf
-│           └── postgresql.conf
-└── main.py
+│   ├── master2
+│   │   └── config
+│   │       ├── pg_hba.conf
+│   │       ├── pg_ident.conf
+│   │       └── postgresql.conf
+│   ├── slave1
+│   │   └── config
+│   │       ├── pg_hba.conf
+│   │       ├── pg_ident.conf
+│   │       └── postgresql.conf
+│   └── slave2
+│       └── config
+│           ├── pg_hba.conf
+│           ├── pg_ident.conf
+│           └── postgresql.conf
+├── dockermongo
+│   ├── README.md
+│   ├── mongomaster
+│   ├── mongoslave1
+│   └── mongoslave2
+├── main.py
+├── part3.py
+├── part4.py
+└── part5.py
 ```
 
 `datasets` has mock data CSVs for the project. Inside the `docker` directory you have a `master` docker image config and `slave1` image config. You can setup more master and slaves by making more master directories `mkdir -p master<#>/config` and slave directories `mkdir -p slave<#>/config` and copying the `.conf` files from the respective `./config` to the new ones.
