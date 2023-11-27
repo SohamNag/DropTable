@@ -278,8 +278,9 @@ if __name__ == "__main__":
         print('2. Find document in a collection')
         print('3. Update document in a collection')
         print('4. Delete document in a collection')
-        print('5. Exit')
-        choice = int(input("Enter choice (1-5): "))
+        print('5. Demonstrate query optimization')
+        print('6. Exit')
+        choice = int(input("Enter choice (1-6): "))
         if(choice == 1):
             initial_data_load()
         elif(choice == 2):
@@ -289,10 +290,11 @@ if __name__ == "__main__":
         elif(choice == 4):
             delete_document_in_collection()
         elif(choice == 5):
-            ans = 'n'    
+            unoptimised_result = non_optimized_query(db["user_preferences"])
+            print("Unoptimized result <truncated>: ", unoptimised_result)
+            optimised_result = optimized_query(db["user_preferences"])
+            print("Optimized result <truncated>: ", optimised_result) 
+        elif(choice == 6):
+            ans = 'n'
 
-    # unoptimised_result = non_optimized_query(db["user_preferences"])
-    # print("Unoptimized result <truncated>: ", unoptimised_result)
-    
-    # optimised_result = optimized_query(db["user_preferences"])
-    # print("Optimized result <truncated>: ", optimised_result)    
+        
